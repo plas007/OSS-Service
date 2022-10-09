@@ -1,0 +1,25 @@
+{
+  "name": "oss",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "serve": "node ./app.js"
+  },
+  "author": "plasma007 <897317986@qq.com>",
+  "license": "MIT",
+  "dependencies": {
+    "koa": "^2.13.4",
+    "koa-body": "^4.2.0",
+    "koa-bodyparser": "^4.3.0",
+    "koa-cors": "^0.0.16",
+    "koa-multer": "^1.0.2",
+    "koa-router": "^10.1.1",
+    "koa-send": "^5.0.1",
+    "koa-sslify": "^5.0.0",
+    "koa-static": "^5.0.0",
+    "koa-views": "^8.0.0",
+    "koa2-connect": "^1.0.2",
+    "koa2-request": "^1.0.4"
+  }
+}

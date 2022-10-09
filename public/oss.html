@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文本资源共享</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-size: 14px;
+    }
+
+    html {
+      overflow-y: scroll;
+    }
+
+
+    *::-webkit-scrollbar {
+      display: none;
+    }
+
+    .containerBox {
+      display: flex;
+    }
+
+    .mobileBox {
+      margin: auto;
+      position: relative;
+      display: block;
+      padding: 39px 20px 42px 25px;
+      width: 422px;
+      height: 843px;
+      background: url("/images/bg/iphone13pro.png") no-repeat center center/100% 100%;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    .iframe {
+      position: relative;
+      display: block;
+      border: none;
+      width: 414px;
+      height: 851px;
+      scrollbar-width: none;
+      /* firefox */
+      -ms-overflow-style: none;
+      /* IE 10+ */
+      cursor: pointer;
+      border-radius: 46px 48px 60px 60px;
+    }
+
+    .iframe::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+  <script>
+    function isApp(userAgent) {
+      return userAgent.match(
+          /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+        ) == null ?
+        false :
+        true;
+    }
+    if (isApp(navigator.userAgent)) {
+      location.replace("/oss/")
+    }
+  </script>
+</head>
+
+<body>
+  <div class="containerBox">
+    <div class="mobileBox">
+      <iframe id="mobileView" class="iframe" width="424" frameborder="0" title="文件共享PC端套壳"></iframe>
+      <script>
+        function getQueryParams(name) {
+          return new URL(location).searchParams.get(name);
+        }
+        const webviewUrl = getQueryParams("webviewUrl");
+        if (webviewUrl) {
+          // 收到参数则写入
+          document.getElementById("mobileView").setAttribute("src", decodeURIComponent(webviewUrl));
+        } else {
+          document.getElementById("mobileView").setAttribute("src", "/oss/#/home");
+        }
+
+        class TrackManager {
+          constructor(_win) {
+            this._window = document.getElementById("mobileView").contentWindow;
+            this._urls = [];
+            this._url = this._window.location.href;
+            this._timer = null;
+          }
+          update() {
+            let resourceList = this._window.performance.getEntriesByType(
+              'resource');
+            let newUrls = resourceList.filter(item => item.initiatorType === 'img' && item.name.indexOf(
+              'track_ua.gif') !== -1).map(trackItem => trackItem.name);
+            if (newUrls.length > this._urls.length) {
+              console.log("update:", newUrls.slice(this._urls.length - newUrls.length))
+              this._urls = newUrls;
+            }
+          }
+          updateState() {
+            let backTimer = this._timer;
+            this._timer = this._window.setTimeout(() => {
+              if (backTimer) {
+                this._window.clearTimeout(backTimer);
+              }
+              if (this._url === this._window.location.href) {
+                this.updateState();
+              } else {
+                this._url = this._window.location.href;
+                this.update();
+                this.updateState();
+              }
+            }, 1000);
+
+          }
+        }
+        let trackManager = new TrackManager(window);
+
+        let iframe = document.getElementById("mobileView");
+        // 获取埋点列表
+        const getTrackList = function () {
+          if (window.timer) {
+            window.clearTimeout(window.timer);
+          }
+          window.timer = window.setTimeout(() => {
+            trackManager.update()
+          }, 0)
+        }
+
+        const initEvent = function () {
+          let _iframe = document.getElementById("mobileView");
+
+          _iframe.contentWindow.document.body.addEventListener('click', () => {
+            getTrackList();
+          })
+
+          let _document = _iframe.contentWindow.document;
+
+          // iframe加载完成后要进行的操作
+          _document.body.style.overflowX = 'clip';
+          _document.body.style.cursor = 'pointer';
+          _document.body.style.marginRight = 'calc(100% - 100vw)';
+          _document.body.style.marginBottom = 'calc(100% - 100vh)';
+
+          getTrackList();
+          trackManager.updateState();
+        }
+
+        if (iframe.attachEvent) { // 兼容IE写法
+          iframe.attachEvent("onload", initEvent)
+        } else {
+          iframe.onload = initEvent
+        }
+      </script>
+    </div>
+  </div>
+</body>
+
+</html>
